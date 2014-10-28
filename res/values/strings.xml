@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">WebViewExample</string>
+    <string name="app_name">x40240.shaun.adriano.a4.app</string>
     <string name="action_settings">Settings</string>
     <string name="label_next">Next</string>
+    <string name="address_label">Address: </string>
+    <string name="description_label">Description: </string>
+    <string name="address_value">address goes here</string>
+    <string name="description_value">description goes here</string>
+    
 </resources>
