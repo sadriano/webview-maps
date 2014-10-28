@@ -60,8 +60,10 @@ public class MainActivity extends Activity {
 		webSettings.setDomStorageEnabled(true);
 		webSettings.setBuiltInZoomControls(true);
 
+		
 		if (fetchDataTask != null)
 			return;
+			
 		fetchDataTask = new FetchDataTask();
 		fetchDataTask.execute(feedUrl, String.valueOf(locationCount));
 
@@ -86,8 +88,18 @@ public class MainActivity extends Activity {
 	}
 
 	public void onNextButtonClick(View view) {
+		
 		if (index > (allUrls.size() - 1))
 			index = 0;
+			
+		/*
+		for (;;)
+		{
+			for (int i = 0; i < 5) {
+				
+			}
+		}
+		*/
 		final String url = allUrls.get(index);
 		webView.loadUrl(url);
 		index++;
@@ -186,6 +198,7 @@ public class MainActivity extends Activity {
 			sb.append(createdLocation);
 			allUrls.add(sb.toString());
 			sb.delete(0, sb.length());
+			webView.loadUrl(allUrls.get(index));
 
 			onTaskCompleted(true);
 		}
