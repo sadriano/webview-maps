@@ -1,0 +1,10 @@
+<resources>
+    <string-array name="urls">
+        <item>http://m.nytimes.com</item>
+        <item>http://m.cnn.com</item>
+        <item>http://m.uci.edu</item>
+    </string-array>
+    <string-array name="locations">
+        <item>33.652923,-117.843161</item>
+    </string-array>
+</resources>
