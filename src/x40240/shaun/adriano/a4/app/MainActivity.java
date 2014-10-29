@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import x40240.shaun.adriano.a4.app.R;
 import android.annotation.SuppressLint;
 import android.app.Activity;
-
 import android.graphics.Color;
 import android.net.http.SslError;
 import android.os.Bundle;
@@ -36,6 +35,8 @@ public class MainActivity extends Activity {
 
 	private WebView webView;
 	private final ArrayList<String> allUrls = new ArrayList<String>();
+	private final ArrayList<URL> locationUrl = new ArrayList<URL>();
+	private final ArrayList<LocationInfo> locationArray = new ArrayList<LocationInfo>();
 	private FetchDataTask fetchDataTask;
 
 	@SuppressLint("SetJavaScriptEnabled")
@@ -66,6 +67,10 @@ public class MainActivity extends Activity {
 			
 		fetchDataTask = new FetchDataTask();
 		fetchDataTask.execute(feedUrl, String.valueOf(locationCount));
+		
+
+		
+
 
 	}
 
@@ -89,20 +94,20 @@ public class MainActivity extends Activity {
 
 	public void onNextButtonClick(View view) {
 		
+		
 		if (index > (allUrls.size() - 1))
 			index = 0;
-			
-		/*
-		for (;;)
-		{
-			for (int i = 0; i < 5) {
-				
-			}
-		}
-		*/
 		final String url = allUrls.get(index);
+		// Checking the URL
+		System.out.println("Maps URL: "+url);
 		webView.loadUrl(url);
+		
+
+		
 		index++;
+
+
+		
 	}
 
 	private class MyWebViewClient extends WebViewClient {
@@ -131,6 +136,7 @@ public class MainActivity extends Activity {
 			locationCount++;
 		else
 			locationCount = 0;
+		System.out.println("location count: " + locationCount);
 	}
 
 	private class FetchDataTask extends AsyncTask<String, Void, LocationInfo> {
@@ -140,30 +146,84 @@ public class MainActivity extends Activity {
 
 			// Get feedUrl param passed to us.
 			final String feedUrl = paramArrayOfParams[0];
-			final int locationCount = Integer.parseInt(paramArrayOfParams[1]);
+			int locationCount = Integer.parseInt(paramArrayOfParams[1]);
 
 			LocationInfo locationInfo = null;
 			InputStream in = null;
-
+			
+			
 			try {
-				final StringBuilder sb = new StringBuilder(feedUrl);
-				sb.append("location-");
-				sb.append(locationCount);
-				sb.append(".xml");
+				
+					for (locationCount = 0; locationCount < 5; locationCount++) {
+						final StringBuilder sb = new StringBuilder(feedUrl);
+						sb.append("location-");
+						sb.append(locationCount);
+						sb.append(".xml");
+						
+						final URL url = new URL(sb.toString());
+						
+						final HttpURLConnection httpConnection = (HttpURLConnection) url
+								.openConnection();
+						final int responseCode = httpConnection.getResponseCode();
+						//in = httpConnection.getInputStream();
+						
+						
+						if (responseCode != HttpURLConnection.HTTP_OK) {
+							 continue;
+						} 
+						//locationInfo = new LocationInfoSAX().parse(in);
+						 locationUrl.add(url);
+					}
+						
+					for (locationCount = 5;; locationCount++) {
+						final StringBuilder sb = new StringBuilder(feedUrl);
+						sb.append("location-");
+						sb.append(locationCount);
+						sb.append(".xml");
+						
+						final URL url = new URL(sb.toString());
+						
+						final HttpURLConnection httpConnection = (HttpURLConnection) url
+								.openConnection();
+						final int responseCode = httpConnection.getResponseCode();
+						//in = httpConnection.getInputStream();
+						
+						
+						if (responseCode != HttpURLConnection.HTTP_OK) {
+							break;
+						}
+						//locationInfo = new LocationInfoSAX().parse(in);
+						 locationUrl.add(url);
+					}
+					
+					//testing
+					for (int i = 0; i < locationUrl.size(); i++) {
+					final URL url2 = new URL(locationUrl.get(i).toString());
+					
+					// Checking the array
+						System.out.println("Printing the array of location-n.xml files...");
+					for (int n = 0; n < locationUrl.size(); n++)
+						System.out.println(locationUrl.get(n).toString());
+					
+					final HttpURLConnection httpConnection2 = (HttpURLConnection) url2
+							.openConnection();
+					final int responseCode2 = httpConnection2.getResponseCode();
+					
+					if (responseCode2 != HttpURLConnection.HTTP_OK) {
+						// Handle error.
+						Log.e(LOGTAG, "responseCode=" + responseCode2);
+						return null;
+					}
+					
+					in = httpConnection2.getInputStream();
+					locationInfo = new LocationInfoSAX().parse(in);
+					
+					locationArray.add(locationInfo);
+					}
+				
+				
 
-				// http://www.jeffreypeacock.com/uci/x402.40/data/location-0.xml
-				final URL url = new URL(sb.toString());
-				final HttpURLConnection httpConnection = (HttpURLConnection) url
-						.openConnection();
-				final int responseCode = httpConnection.getResponseCode();
 
-				if (responseCode != HttpURLConnection.HTTP_OK) {
-					// Handle error.
-					Log.e(LOGTAG, "responseCode=" + responseCode);
-					return null;
-				}
-				in = httpConnection.getInputStream();
-				locationInfo = new LocationInfoSAX().parse(in);
 			} catch (IOException e) {
 				e.printStackTrace();
 			} catch (Throwable t) {
@@ -182,7 +242,9 @@ public class MainActivity extends Activity {
 		// This runs in the main thread and can update the UI
 		@Override
 		protected void onPostExecute(LocationInfo locationInfo) {
-
+			
+			locationInfo = locationArray.get(index);
+			
 			if (locationInfo == null) {
 				onTaskCompleted(false);
 				return;
@@ -190,15 +252,23 @@ public class MainActivity extends Activity {
 			addressText.setText(locationInfo.getAddress());
 			descriptionText.setText(locationInfo.getDescription());
 
+			for (int i = 0; i < locationArray.size(); i++)
+			{
+			locationInfo = locationArray.get(i);
 			final StringBuilder sb = new StringBuilder();
 			String createdLocation = locationInfo.getLatitude() + ","
 					+ locationInfo.getLongitude();
-
 			sb.append(MAPS_BASE_URL);
 			sb.append(createdLocation);
 			allUrls.add(sb.toString());
 			sb.delete(0, sb.length());
+			}
+			
+			
 			webView.loadUrl(allUrls.get(index));
+
+
+			
 
 			onTaskCompleted(true);
 		}
