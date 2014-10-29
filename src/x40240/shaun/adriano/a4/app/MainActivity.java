@@ -33,8 +33,8 @@ public class MainActivity extends Activity {
 	private int locationCount;
 	private TextView addressText;
 	private TextView descriptionText;
-	
-	private ProgressBar  progressBar;
+
+	private ProgressBar progressBar;
 
 	private WebView webView;
 	// This ArrayList holds the maps URLs
@@ -54,7 +54,7 @@ public class MainActivity extends Activity {
 		feedUrl = getString(R.string.feed_url);
 		addressText = (TextView) findViewById(R.id.address_value);
 		descriptionText = (TextView) findViewById(R.id.description_value);
-		progressBar = (ProgressBar)  findViewById(R.id.progress_bar);
+		progressBar = (ProgressBar) findViewById(R.id.progress_bar);
 
 		webView = (WebView) findViewById(R.id.web_view);
 		webView.setKeepScreenOn(true);
@@ -105,7 +105,6 @@ public class MainActivity extends Activity {
 		addressText.setText(locationInfoList.get(index).getAddress());
 		descriptionText.setText(locationInfoList.get(index).getDescription());
 		webView.loadUrl(url);
-		
 
 	}
 
@@ -139,18 +138,20 @@ public class MainActivity extends Activity {
 	}
 
 	private class FetchDataTask extends AsyncTask<String, Void, LocationInfo> {
-		
+
 		private final boolean DEBUG = true;
-		
-        @Override
-        protected void onPreExecute() {
-            if (DEBUG) Log.d(LOGTAG, "**** onPreExecute() STARTING");
-            progressBar.setVisibility(View.VISIBLE);
-        }
+
+		@Override
+		protected void onPreExecute() {
+			if (DEBUG)
+				Log.d(LOGTAG, "**** onPreExecute() STARTING");
+			progressBar.setVisibility(View.VISIBLE);
+		}
 
 		@Override
 		protected LocationInfo doInBackground(String... paramArrayOfParams) {
-			if (DEBUG) Log.d(LOGTAG, "**** doInBackground() STARTING");
+			if (DEBUG)
+				Log.d(LOGTAG, "**** doInBackground() STARTING");
 
 			final String feedUrl = paramArrayOfParams[0];
 			int locationCount = Integer.parseInt(paramArrayOfParams[1]);
