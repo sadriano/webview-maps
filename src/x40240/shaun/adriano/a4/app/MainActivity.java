@@ -20,6 +20,7 @@ import android.webkit.SslErrorHandler;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 public class MainActivity extends Activity {
@@ -32,11 +33,16 @@ public class MainActivity extends Activity {
 	private int locationCount;
 	private TextView addressText;
 	private TextView descriptionText;
+	
+	private ProgressBar  progressBar;
 
 	private WebView webView;
-	private final ArrayList<String> allUrls = new ArrayList<String>();
-	private final ArrayList<URL> locationUrl = new ArrayList<URL>();
-	private final ArrayList<LocationInfo> locationArray = new ArrayList<LocationInfo>();
+	// This ArrayList holds the maps URLs
+	private final ArrayList<String> mapsUrls = new ArrayList<String>();
+	// This ArrayList holds the location-n.xml URLs
+	private final ArrayList<URL> locationXmlUrls = new ArrayList<URL>();
+	// This ArrayList holds each LocationInfo object
+	private final ArrayList<LocationInfo> locationInfoList = new ArrayList<LocationInfo>();
 	private FetchDataTask fetchDataTask;
 
 	@SuppressLint("SetJavaScriptEnabled")
@@ -48,6 +54,7 @@ public class MainActivity extends Activity {
 		feedUrl = getString(R.string.feed_url);
 		addressText = (TextView) findViewById(R.id.address_value);
 		descriptionText = (TextView) findViewById(R.id.description_value);
+		progressBar = (ProgressBar)  findViewById(R.id.progress_bar);
 
 		webView = (WebView) findViewById(R.id.web_view);
 		webView.setKeepScreenOn(true);
@@ -61,16 +68,11 @@ public class MainActivity extends Activity {
 		webSettings.setDomStorageEnabled(true);
 		webSettings.setBuiltInZoomControls(true);
 
-		
 		if (fetchDataTask != null)
 			return;
-			
+
 		fetchDataTask = new FetchDataTask();
 		fetchDataTask.execute(feedUrl, String.valueOf(locationCount));
-		
-
-		
-
 
 	}
 
@@ -93,21 +95,18 @@ public class MainActivity extends Activity {
 	}
 
 	public void onNextButtonClick(View view) {
-		
-		
-		if (index > (allUrls.size() - 1))
+
+		index++;
+		if (index > (mapsUrls.size() - 1))
 			index = 0;
-		final String url = allUrls.get(index);
+		final String url = mapsUrls.get(index);
 		// Checking the URL
-		System.out.println("Maps URL: "+url);
+		System.out.println("Maps URL: " + url);
+		addressText.setText(locationInfoList.get(index).getAddress());
+		descriptionText.setText(locationInfoList.get(index).getDescription());
 		webView.loadUrl(url);
 		
 
-		
-		index++;
-
-
-		
 	}
 
 	private class MyWebViewClient extends WebViewClient {
@@ -140,89 +139,91 @@ public class MainActivity extends Activity {
 	}
 
 	private class FetchDataTask extends AsyncTask<String, Void, LocationInfo> {
+		
+		private final boolean DEBUG = true;
+		
+        @Override
+        protected void onPreExecute() {
+            if (DEBUG) Log.d(LOGTAG, "**** onPreExecute() STARTING");
+            progressBar.setVisibility(View.VISIBLE);
+        }
 
 		@Override
 		protected LocationInfo doInBackground(String... paramArrayOfParams) {
+			if (DEBUG) Log.d(LOGTAG, "**** doInBackground() STARTING");
 
-			// Get feedUrl param passed to us.
 			final String feedUrl = paramArrayOfParams[0];
 			int locationCount = Integer.parseInt(paramArrayOfParams[1]);
 
 			LocationInfo locationInfo = null;
 			InputStream in = null;
-			
-			
+
 			try {
-				
-					for (locationCount = 0; locationCount < 5; locationCount++) {
-						final StringBuilder sb = new StringBuilder(feedUrl);
-						sb.append("location-");
-						sb.append(locationCount);
-						sb.append(".xml");
-						
-						final URL url = new URL(sb.toString());
-						
-						final HttpURLConnection httpConnection = (HttpURLConnection) url
-								.openConnection();
-						final int responseCode = httpConnection.getResponseCode();
-						//in = httpConnection.getInputStream();
-						
-						
-						if (responseCode != HttpURLConnection.HTTP_OK) {
-							 continue;
-						} 
-						//locationInfo = new LocationInfoSAX().parse(in);
-						 locationUrl.add(url);
+
+				for (locationCount = 0; locationCount < 5; locationCount++) {
+					final StringBuilder sb = new StringBuilder(feedUrl);
+					sb.append("location-");
+					sb.append(locationCount);
+					sb.append(".xml");
+
+					final URL url = new URL(sb.toString());
+
+					final HttpURLConnection httpConnection = (HttpURLConnection) url
+							.openConnection();
+					final int responseCode = httpConnection.getResponseCode();
+					// in = httpConnection.getInputStream();
+
+					if (responseCode != HttpURLConnection.HTTP_OK) {
+						continue;
 					}
-						
-					for (locationCount = 5;; locationCount++) {
-						final StringBuilder sb = new StringBuilder(feedUrl);
-						sb.append("location-");
-						sb.append(locationCount);
-						sb.append(".xml");
-						
-						final URL url = new URL(sb.toString());
-						
-						final HttpURLConnection httpConnection = (HttpURLConnection) url
-								.openConnection();
-						final int responseCode = httpConnection.getResponseCode();
-						//in = httpConnection.getInputStream();
-						
-						
-						if (responseCode != HttpURLConnection.HTTP_OK) {
-							break;
-						}
-						//locationInfo = new LocationInfoSAX().parse(in);
-						 locationUrl.add(url);
+					// locationInfo = new LocationInfoSAX().parse(in);
+					locationXmlUrls.add(url);
+				}
+
+				for (locationCount = 5;; locationCount++) {
+					final StringBuilder sb = new StringBuilder(feedUrl);
+					sb.append("location-");
+					sb.append(locationCount);
+					sb.append(".xml");
+
+					final URL url = new URL(sb.toString());
+
+					final HttpURLConnection httpConnection = (HttpURLConnection) url
+							.openConnection();
+					final int responseCode = httpConnection.getResponseCode();
+					// in = httpConnection.getInputStream();
+
+					if (responseCode != HttpURLConnection.HTTP_OK) {
+						break;
 					}
-					
-					//testing
-					for (int i = 0; i < locationUrl.size(); i++) {
-					final URL url2 = new URL(locationUrl.get(i).toString());
-					
-					// Checking the array
-						System.out.println("Printing the array of location-n.xml files...");
-					for (int n = 0; n < locationUrl.size(); n++)
-						System.out.println(locationUrl.get(n).toString());
-					
+					// locationInfo = new LocationInfoSAX().parse(in);
+					locationXmlUrls.add(url);
+				}
+
+				for (int i = 0; i < locationXmlUrls.size(); i++) {
+					final URL url2 = new URL(locationXmlUrls.get(i).toString());
+
 					final HttpURLConnection httpConnection2 = (HttpURLConnection) url2
 							.openConnection();
 					final int responseCode2 = httpConnection2.getResponseCode();
-					
+
 					if (responseCode2 != HttpURLConnection.HTTP_OK) {
 						// Handle error.
 						Log.e(LOGTAG, "responseCode=" + responseCode2);
 						return null;
 					}
-					
+
 					in = httpConnection2.getInputStream();
 					locationInfo = new LocationInfoSAX().parse(in);
-					
-					locationArray.add(locationInfo);
-					}
-				
-				
 
+					locationInfoList.add(locationInfo);
+				}
+
+				// Checking the array
+				System.out
+						.println("Printing the array of location-n.xml files...");
+				for (int n = 0; n < locationXmlUrls.size(); n++)
+					System.out.println(locationXmlUrls.get(n).toString());
 
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -242,34 +243,29 @@ public class MainActivity extends Activity {
 		// This runs in the main thread and can update the UI
 		@Override
 		protected void onPostExecute(LocationInfo locationInfo) {
-			
-			locationInfo = locationArray.get(index);
-			
+			progressBar.setVisibility(View.GONE);
+			locationInfo = locationInfoList.get(index);
+
 			if (locationInfo == null) {
 				onTaskCompleted(false);
 				return;
 			}
-			addressText.setText(locationInfo.getAddress());
-			descriptionText.setText(locationInfo.getDescription());
+			addressText.setText(locationInfoList.get(index).getAddress());
+			descriptionText.setText(locationInfoList.get(index)
+					.getDescription());
 
-			for (int i = 0; i < locationArray.size(); i++)
-			{
-			locationInfo = locationArray.get(i);
-			final StringBuilder sb = new StringBuilder();
-			String createdLocation = locationInfo.getLatitude() + ","
-					+ locationInfo.getLongitude();
-			sb.append(MAPS_BASE_URL);
-			sb.append(createdLocation);
-			allUrls.add(sb.toString());
-			sb.delete(0, sb.length());
+			for (int i = 0; i < locationInfoList.size(); i++) {
+				locationInfo = locationInfoList.get(i);
+				final StringBuilder sb = new StringBuilder();
+				String createdLocation = locationInfo.getLatitude() + ","
+						+ locationInfo.getLongitude();
+				sb.append(MAPS_BASE_URL);
+				sb.append(createdLocation);
+				mapsUrls.add(sb.toString());
+				sb.delete(0, sb.length());
 			}
-			
-			
-			webView.loadUrl(allUrls.get(index));
 
-
-			
-
+			webView.loadUrl(mapsUrls.get(index));
 			onTaskCompleted(true);
 		}
 

@@ -45,14 +45,26 @@
         android:layout_height="wrap_content"
         android:layout_alignLeft="@+id/address_label"
         android:layout_below="@+id/address_label"
+        android:layout_marginTop="14dp"
         android:text="@string/description_label" />
 
     <TextView
         android:id="@+id/description_value"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/address_value"
+        android:layout_alignBaseline="@+id/description_label"
+        android:layout_alignBottom="@+id/description_label"
         android:layout_toRightOf="@+id/description_label"
         android:text="@string/description_value" />
+
+    <ProgressBar
+        android:id="@+id/progress_bar"
+        style="@android:style/Widget.ProgressBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_alignTop="@+id/web_view"
+        android:layout_marginTop="150dp"
+        android:visibility="visible" />
 
 </RelativeLayout>
